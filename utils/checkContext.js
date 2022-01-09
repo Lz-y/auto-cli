@@ -4,8 +4,7 @@ const path = require('path')
 const mkDir = require('./dir')
 const {warn, success} = require('./log')
 
-function checkContext (name, options, extname, type) {
-  const { filePath, basePath } = options
+async function checkContext (name, filePath, basePath, extname, type) {
 
   const rootDir = basePath ? basePath : '.'
 
@@ -21,7 +20,6 @@ function checkContext (name, options, extname, type) {
 
   if (fs.existsSync(path.resolve(deskPath, `index.${extname}`))) {
     warn(`${type}: ${path.join(name, `index.${extname}`)}已存在`)
-    return
   }
 
   return { deskPath, absolutePath }
