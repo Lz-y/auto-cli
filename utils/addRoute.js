@@ -5,7 +5,13 @@ const {warn} = require('./log')
 const writeFile = promisify(fs.writeFile)
 const readFile = promisify(fs.readFile)
 
-
+// bug 1 这里需要对数组中的 component 属性对应的函数进行处理，否则直接使用JSON.stringfiy时忽略掉该属性的转换
+const handleFuncToString = (key, value) => {
+  if (typeof value === 'function' || typeof value === 'undefined') {
+    return `${value}`
+  }
+  return value
+}
 module.exports = async function addRoute (name, absolutePath, routePath, basePath, extname) {
   const rootDir = basePath ? basePath : '.'
 
@@ -24,11 +30,14 @@ module.exports = async function addRoute (name, absolutePath, routePath, basePat
 
   let content = await readFile(routerPath, {encoding: 'utf-8'})
 
-  const ROUTERREG = /routes.*?\s*=\s*([\s\S]*)\]\s*/
+  const ROUTERREG = /[rR]outes(.*?)\s*=\s*([\s\S]*)\]\s*/
 
   ROUTERREG.exec(content)
-  const matchContent = RegExp.$1 + ']'
-  const realRoute = (new Function('return '+ matchContent))()
+  const matchType = RegExp.$1
+  let matchContent = RegExp.$2 + ']'
+  console.log(matchContent)
+  // error: route中使用了定义的变量，无法将 route 转换为数组
+  const realRoute = (new Function('return ' + matchContent))()
 
   let i = 0
   const hasRoute = realRoute.some((route, _) => {i = _; return route.name === pathTree[0]})
@@ -62,14 +71,7 @@ module.exports = async function addRoute (name, absolutePath, routePath, basePat
     }
   }
 
-  // bug 1 这里需要对数组中的 component 属性对应的函数进行处理，否则直接使用JSON.stringfiy时忽略掉该属性的转换
-  const handleFuncToString = (key, value) => {
-    if (typeof value === 'function') {
-      return `${value}`
-    }
-    return value
-  }
-  content = content.replace(ROUTERREG, `routes = ${JSON.stringify(realRoute, handleFuncToString, 2).replace(/\"(\w+)\"\: ([\[|\{|\"]([^\"\{\[]+))/g, (_, $1, $2, $3) => {
+  content = content.replace(ROUTERREG, `[rR]outes${matchType} = ${JSON.stringify(realRoute, handleFuncToString, 2).replace(/\"(\w+)\"\: ([\[|\{|\"]([^\"\{\[]+))/g, (_, $1, $2, $3) => {
     if (['children', 'meta'].includes($1)) {
       return $1 + ': ' + $2
     }

@@ -6,7 +6,7 @@ const { createPageAsk } = require('../utils/ask')
 const addRouter = require('../utils/addRoute')
 
 async function createPage (names, options) {
-  const { filePath, appendRoute, routePath, basePath } = options
+  const { filePath, appendRoute, routePath, basePath, isDir } = options
   try {
     // 1. 选择版本、框架类型、是否使用ts
     // 2. 判断文件是否已存在
@@ -19,20 +19,21 @@ async function createPage (names, options) {
     }
     const extname = type === 'vue' ? type : useTs ? 'tsx' : 'jsx'
     for (const name of names) {
-      const { deskPath, absolutePath } = await checkContext(name, filePath, basePath, extname, appendRoute ? 'page': 'componen')
+      const { relativePath, absolutePath } = await checkContext(name, filePath, basePath, extname, appendRoute ? 'page': 'componen', isDir)
 
-      if (!!deskPath) {
+      if (!!absolutePath) {
         log(`开始创建页面/组件...`)
-        await copyTemplate(deskPath, version, extname)
-        success(`${absolutePath} 页面/组件创建成功`)
+        await copyTemplate(absolutePath, version, extname)
+        success(`${relativePath} 页面/组件创建成功`)
 
         if (appendRoute) {
-          await addRouter(name, absolutePath, routePath, basePath, useTs ? 'ts' : 'js',)
+          await addRouter(name, relativePath, routePath, basePath, useTs ? 'ts' : 'js',)
           success(`${name} 已添加到路由\n`)
         }
       }
     }
   } catch (err) {
+    console.trace(err)
     error(err)
     error(`${names.join(', ')} 页面/组件创建失败`)
   }
