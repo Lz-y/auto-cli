@@ -27,7 +27,7 @@ async function createPage (names, options) {
         success(`${absolutePath} 页面/组件创建成功`)
 
         if (appendRoute) {
-          await addRouter(name, absolutePath, options, useTs ? 'ts' : 'js',)
+          await addRouter(name, absolutePath, routePath, basePath, useTs ? 'ts' : 'js',)
           success(`${name} 已添加到路由\n`)
         }
       }

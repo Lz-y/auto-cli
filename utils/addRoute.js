@@ -6,9 +6,7 @@ const writeFile = promisify(fs.writeFile)
 const readFile = promisify(fs.readFile)
 
 
-module.exports = async function addRoute (name, absolutePath, options, extname) {
-  const { routePath, basePath } = options
-  
+module.exports = async function addRoute (name, absolutePath, routePath, basePath, extname) {
   const rootDir = basePath ? basePath : '.'
 
   const pathTree = name.split('/')
@@ -26,7 +24,7 @@ module.exports = async function addRoute (name, absolutePath, options, extname) 
 
   let content = await readFile(routerPath, {encoding: 'utf-8'})
 
-  const ROUTERREG = /routes\s*=\s*([\s\S]*)\]\s*/
+  const ROUTERREG = /routes.*?\s*=\s*([\s\S]*)\]\s*/
 
   ROUTERREG.exec(content)
   const matchContent = RegExp.$1 + ']'
@@ -45,7 +43,7 @@ module.exports = async function addRoute (name, absolutePath, options, extname) 
         {
           path: pathTree[1],
           name: pathTree[1],
-          component: `() => import('${absolutePath}')`,
+          component: `() => import('${absolutePath.replace(/\\/g, '/')}')`,
           meta: {title: pathTree[1]},
         }
       ]
@@ -58,7 +56,7 @@ module.exports = async function addRoute (name, absolutePath, options, extname) 
       realRoute[i].children.push({
         path: pathTree[1],
         name: pathTree[1],
-        component: `() => import('${absolutePath}')`,
+        component: `() => import('${absolutePath.replace(/\\/g, '/')}')`,
         meta: {title: pathTree[1]}
       })
     }
